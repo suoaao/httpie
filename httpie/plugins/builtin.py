@@ -28,9 +28,9 @@ class HTTPBasicAuth(requests.auth.HTTPBasicAuth):
 
     @staticmethod
     def make_header(username: str, password: str) -> str:
-        credentials = u'%s:%s' % (username, password)
+        credentials = f'{username}:{password}'
         token = b64encode(credentials.encode('utf8')).strip().decode('latin1')
-        return 'Basic %s' % token
+        return f'Basic {token}'
 
 
 class BasicAuthPlugin(BuiltinAuthPlugin):

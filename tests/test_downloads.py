@@ -138,9 +138,8 @@ class TestDownloads:
             downloader.start(
                 initial_url='/',
                 final_response=Response(
-                    url=httpbin_both.url + '/',
-                    headers={'Content-Length': 10}
-                )
+                    url=f'{httpbin_both.url}/', headers={'Content-Length': 10}
+                ),
             )
             time.sleep(1.1)
             downloader.chunk_downloaded(b'12345')
@@ -154,8 +153,8 @@ class TestDownloads:
         with open(os.devnull, 'w') as devnull:
             downloader = Downloader(output_file=devnull, progress_file=devnull)
             downloader.start(
-                final_response=Response(url=httpbin_both.url + '/'),
-                initial_url='/'
+                final_response=Response(url=f'{httpbin_both.url}/'),
+                initial_url='/',
             )
             time.sleep(1.1)
             downloader.chunk_downloaded(b'12345')
@@ -168,10 +167,9 @@ class TestDownloads:
             downloader = Downloader(output_file=devnull, progress_file=devnull)
             downloader.start(
                 final_response=Response(
-                    url=httpbin_both.url + '/',
-                    headers={'Content-Length': 5}
+                    url=f'{httpbin_both.url}/', headers={'Content-Length': 5}
                 ),
-                initial_url='/'
+                initial_url='/',
             )
             downloader.chunk_downloaded(b'1234')
             downloader.finish()
@@ -185,7 +183,7 @@ class TestDownloads:
         os.chdir(tempfile.mkdtemp(prefix='httpie_download_test_'))
         try:
             assert os.listdir('.') == []
-            http('--download', httpbin.url + '/redirect/1')
+            http('--download', f'{httpbin.url}/redirect/1')
             assert os.listdir('.') == [expected_filename]
         finally:
             os.chdir(orig_cwd)

@@ -92,16 +92,14 @@ class HTTPieArgumentParser(argparse.ArgumentParser):
             if os.path.basename(program_name) == 'https':
                 scheme = 'https://'
             else:
-                scheme = self.args.default_scheme + "://"
+                scheme = f"{self.args.default_scheme}://"
 
-            # See if we're using curl style shorthand for localhost (:3000/foo)
-            shorthand = re.match(r'^:(?!:)(\d*)(/?.*)$', self.args.url)
-            if shorthand:
+            if shorthand := re.match(r'^:(?!:)(\d*)(/?.*)$', self.args.url):
                 port = shorthand.group(1)
                 rest = shorthand.group(2)
-                self.args.url = scheme + 'localhost'
+                self.args.url = f'{scheme}localhost'
                 if port:
-                    self.args.url += ':' + port
+                    self.args.url += f':{port}'
                 self.args.url += rest
             else:
                 self.args.url = scheme + self.args.url
@@ -146,10 +144,7 @@ class HTTPieArgumentParser(argparse.ArgumentParser):
             try:
                 self.args.output_file.truncate()
             except IOError as e:
-                if e.errno == errno.EINVAL:
-                    # E.g. /dev/null on Linux.
-                    pass
-                else:
+                if e.errno != errno.EINVAL:
                     raise
             self.env.stdout = self.args.output_file
             self.env.stdout_isatty = False
@@ -183,17 +178,12 @@ class HTTPieArgumentParser(argparse.ArgumentParser):
 
             plugin.raw_auth = self.args.auth
             self.args.auth_plugin = plugin
-            already_parsed = isinstance(self.args.auth, AuthCredentials)
-
             if self.args.auth is None or not plugin.auth_parse:
                 self.args.auth = plugin.get_auth()
             else:
-                if already_parsed:
-                    # from the URL
-                    credentials = self.args.auth
-                else:
-                    credentials = parse_auth(self.args.auth)
+                already_parsed = isinstance(self.args.auth, AuthCredentials)
 
+                credentials = self.args.auth if already_parsed else parse_auth(self.args.auth)
                 if (not credentials.has_password()
                         and plugin.prompt_password):
                     if self.args.ignore_stdin:
@@ -226,7 +216,7 @@ class HTTPieArgumentParser(argparse.ArgumentParser):
                 continue
 
             # --no-option => --option
-            inverted = '--' + option[5:]
+            inverted = f'--{option[5:]}'
             for action in self._actions:
                 if inverted in action.option_strings:
                     setattr(self.args, action.dest, action.default)
@@ -235,8 +225,7 @@ class HTTPieArgumentParser(argparse.ArgumentParser):
                 invalid.append(option)
 
         if invalid:
-            msg = 'unrecognized arguments: %s'
-            self.error(msg % ' '.join(invalid))
+            self.error(f"unrecognized arguments: {' '.join(invalid)}")
 
     def _body_from_file(self, fd):
         """There can only be one source of request data.
@@ -258,12 +247,7 @@ class HTTPieArgumentParser(argparse.ArgumentParser):
         if self.args.method is None:
             # Invoked as `http URL'.
             assert not self.args.request_items
-            if self.has_stdin_data:
-                self.args.method = HTTP_POST
-            else:
-                self.args.method = HTTP_GET
-
-        # FIXME: False positive, e.g., "localhost" matches but is a valid URL.
+            self.args.method = HTTP_POST if self.has_stdin_data else HTTP_GET
         elif not re.match('^[a-zA-Z]+$', self.args.method):
             # Invoked as `http URL item+'. The URL is now in `args.method`
             # and the first ITEM is now incorrectly in `args.url`.
@@ -315,17 +299,16 @@ class HTTPieArgumentParser(argparse.ArgumentParser):
             file_fields = list(self.args.files.keys())
             if file_fields != ['']:
                 self.error(
-                    'Invalid file fields (perhaps you meant --form?): %s'
-                    % ','.join(file_fields))
+                    f"Invalid file fields (perhaps you meant --form?): {','.join(file_fields)}"
+                )
 
             fn, fd, ct = self.args.files['']
             self.args.files = {}
 
             self._body_from_file(fd)
 
-            if 'Content-Type' not in self.args.headers:
-                content_type = get_content_type(fn)
-                if content_type:
+            if content_type := get_content_type(fn):
+                if 'Content-Type' not in self.args.headers:
                     self.args.headers['Content-Type'] = content_type
 
     def _process_output_options(self):

@@ -104,7 +104,7 @@ def process_file_upload_arg(arg: KeyValueArg) -> Tuple[str, IO, str]:
         with open(os.path.expanduser(filename), 'rb') as f:
             contents = f.read()
     except IOError as e:
-        raise ParseError('"%s": %s' % (arg.orig, e))
+        raise ParseError(f'"{arg.orig}": {e}')
     return (
         os.path.basename(filename),
         BytesIO(contents),
@@ -117,7 +117,7 @@ def parse_file_item_chunked(arg: KeyValueArg):
     try:
         f = open(os.path.expanduser(fn), 'rb')
     except IOError as e:
-        raise ParseError('"%s": %s' % (arg.orig, e))
+        raise ParseError(f'"{arg.orig}": {e}')
     return os.path.basename(fn), f, get_content_type(fn)
 
 
@@ -131,8 +131,7 @@ def process_data_embed_file_contents_arg(arg: KeyValueArg) -> str:
 
 def process_data_embed_raw_json_file_arg(arg: KeyValueArg) -> JSONType:
     contents = load_text_file(arg)
-    value = load_json(arg, contents)
-    return value
+    return load_json(arg, contents)
 
 
 def process_data_raw_json_embed_arg(arg: KeyValueArg) -> JSONType:
@@ -146,7 +145,7 @@ def load_text_file(item: KeyValueArg) -> str:
         with open(os.path.expanduser(path), 'rb') as f:
             return f.read().decode()
     except IOError as e:
-        raise ParseError('"%s": %s' % (item.orig, e))
+        raise ParseError(f'"{item.orig}": {e}')
     except UnicodeDecodeError:
         raise ParseError(
             '"%s": cannot embed the content of "%s",'
@@ -159,4 +158,4 @@ def load_json(arg: KeyValueArg, contents: str) -> JSONType:
     try:
         return load_json_preserve_order(contents)
     except ValueError as e:
-        raise ParseError('"%s": %s' % (arg.orig, e))
+        raise ParseError(f'"{arg.orig}": {e}')

@@ -44,8 +44,7 @@ class BaseConfigDict(dict):
                     data = json.load(f)
                 except ValueError as e:
                     raise ValueError(
-                        'Invalid %s JSON: %s [%s]' %
-                        (type(self).__name__, str(e), self.path())
+                        f'Invalid {type(self).__name__} JSON: {str(e)} [{self.path()}]'
                     )
                 self.update(data)
         except IOError as e:
@@ -92,7 +91,7 @@ class Config(BaseConfigDict):
         self.directory = Path(directory)
 
     def _get_path(self) -> Path:
-        return self.directory / (self.name + '.json')
+        return self.directory / f'{self.name}.json'
 
     @property
     def default_options(self) -> list:

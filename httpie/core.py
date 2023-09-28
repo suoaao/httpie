@@ -96,10 +96,7 @@ def main(
             log_error(f'Request timed out ({parsed_args.timeout}s).')
         except requests.TooManyRedirects:
             exit_status = ExitStatus.ERROR_TOO_MANY_REDIRECTS
-            log_error(
-                f'Too many redirects'
-                f' (--max-redirects=parsed_args.max_redirects).'
-            )
+            log_error('Too many redirects (--max-redirects=parsed_args.max_redirects).')
         except Exception as e:
             # TODO: Further distinction between expected and unexpected errors.
             msg = str(e)
@@ -195,13 +192,15 @@ def program(
 
 
 def print_debug_info(env: Environment):
-    env.stderr.writelines([
-        'HTTPie %s\n' % httpie_version,
-        'Requests %s\n' % requests_version,
-        'Pygments %s\n' % pygments_version,
-        'Python %s\n%s\n' % (sys.version, sys.executable),
-        '%s %s' % (platform.system(), platform.release()),
-    ])
+    env.stderr.writelines(
+        [
+            'HTTPie %s\n' % httpie_version,
+            'Requests %s\n' % requests_version,
+            'Pygments %s\n' % pygments_version,
+            'Python %s\n%s\n' % (sys.version, sys.executable),
+            f'{platform.system()} {platform.release()}',
+        ]
+    )
     env.stderr.write('\n\n')
     env.stderr.write(repr(env))
     env.stderr.write('\n')

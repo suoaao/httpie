@@ -2,6 +2,7 @@
 CLI arguments definition.
 
 """
+
 from argparse import (FileType, OPTIONAL, SUPPRESS, ZERO_OR_MORE)
 from textwrap import dedent, wrap
 
@@ -25,8 +26,9 @@ from httpie.sessions import DEFAULT_SESSIONS_DIR
 
 parser = HTTPieArgumentParser(
     prog='http',
-    description='%s <https://httpie.org>' % __doc__.strip(),
-    epilog=dedent("""
+    description=f'{__doc__.strip()} <https://httpie.org>',
+    epilog=dedent(
+        """
     For every --OPTION there is also a --no-OPTION that reverts OPTION
     to its default value.
 
@@ -34,7 +36,8 @@ parser = HTTPieArgumentParser(
 
         https://github.com/jakubroztocil/httpie/issues
 
-    """),
+    """
+    ),
 )
 
 #######################################################################
@@ -428,29 +431,36 @@ class _AuthTypeLazyChoices:
 
 _auth_plugins = plugin_manager.get_auth_plugins()
 auth.add_argument(
-    '--auth-type', '-A',
+    '--auth-type',
+    '-A',
     choices=_AuthTypeLazyChoices(),
     default=None,
-    help="""
+    help=(
+        """
     The authentication mechanism to be used. Defaults to "{default}".
 
     {types}
 
-    """.format(default=_auth_plugins[0].auth_type, types='\n    '.join(
-        '"{type}": {name}{package}{description}'.format(
-            type=plugin.auth_type,
-            name=plugin.name,
-            package=(
-                '' if issubclass(plugin, BuiltinAuthPlugin)
-                else ' (provided by %s)' % plugin.package_name
+    """.format(
+            default=_auth_plugins[0].auth_type,
+            types='\n    '.join(
+                '"{type}": {name}{package}{description}'.format(
+                    type=plugin.auth_type,
+                    name=plugin.name,
+                    package=''
+                    if issubclass(plugin, BuiltinAuthPlugin)
+                    else f' (provided by {plugin.package_name})',
+                    description=(
+                        ''
+                        if not plugin.description
+                        else '\n      '
+                        + ('\n      '.join(wrap(plugin.description)))
+                    ),
+                )
+                for plugin in _auth_plugins
             ),
-            description=(
-                '' if not plugin.description else
-                '\n      ' + ('\n      '.join(wrap(plugin.description)))
-            )
         )
-        for plugin in _auth_plugins
-    )),
+    ),
 )
 auth.add_argument(
     '--ignore-netrc',

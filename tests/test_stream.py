@@ -17,8 +17,14 @@ def test_pretty_redirected_stream(httpbin):
         env = MockEnvironment(colors=256, stdin=f,
                               stdin_isatty=False,
                               stdout_isatty=False)
-        r = http('--verbose', '--pretty=all', '--stream', 'GET',
-                 httpbin.url + '/get', env=env)
+        r = http(
+            '--verbose',
+            '--pretty=all',
+            '--stream',
+            'GET',
+            f'{httpbin.url}/get',
+            env=env,
+        )
     assert BINARY_SUPPRESSED_NOTICE.decode() in r
 
 
@@ -27,8 +33,14 @@ def test_encoded_stream(httpbin):
     redirected terminal output."""
     with open(BIN_FILE_PATH, 'rb') as f:
         env = MockEnvironment(stdin=f, stdin_isatty=False)
-        r = http('--pretty=none', '--stream', '--verbose', 'GET',
-                 httpbin.url + '/get', env=env)
+        r = http(
+            '--pretty=none',
+            '--stream',
+            '--verbose',
+            'GET',
+            f'{httpbin.url}/get',
+            env=env,
+        )
     assert BINARY_SUPPRESSED_NOTICE.decode() in r
 
 
@@ -39,6 +51,12 @@ def test_redirected_stream(httpbin):
         env = MockEnvironment(stdout_isatty=False,
                               stdin_isatty=False,
                               stdin=f)
-        r = http('--pretty=none', '--stream', '--verbose', 'GET',
-                 httpbin.url + '/get', env=env)
+        r = http(
+            '--pretty=none',
+            '--stream',
+            '--verbose',
+            'GET',
+            f'{httpbin.url}/get',
+            env=env,
+        )
     assert BIN_FILE_CONTENT in r

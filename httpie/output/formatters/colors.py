@@ -21,13 +21,8 @@ from httpie.plugins import FormatterPlugin
 
 
 AUTO_STYLE = 'auto'  # Follows terminal ANSI color styles
-DEFAULT_STYLE = AUTO_STYLE
 SOLARIZED_STYLE = 'solarized'  # Bundled here
-if is_windows:
-    # Colors on Windows via colorama don't look that
-    # great and fruity seems to give the best result there.
-    DEFAULT_STYLE = 'fruity'
-
+DEFAULT_STYLE = 'fruity' if is_windows else AUTO_STYLE
 AVAILABLE_STYLES = set(pygments.styles.get_all_styles())
 AVAILABLE_STYLES.add(SOLARIZED_STYLE)
 AVAILABLE_STYLES.add(AUTO_STYLE)
@@ -79,8 +74,7 @@ class ColorFormatter(FormatterPlugin):
         ).strip()
 
     def format_body(self, body: str, mime: str) -> str:
-        lexer = self.get_lexer_for_body(mime, body)
-        if lexer:
+        if lexer := self.get_lexer_for_body(mime, body):
             body = pygments.highlight(
                 code=body,
                 lexer=lexer,
@@ -119,10 +113,7 @@ def get_lexer(
     else:
         subtype_name, subtype_suffix = subtype.split('+', 1)
         lexer_names.extend([subtype_name, subtype_suffix])
-        mime_types.extend([
-            '%s/%s' % (type_, subtype_name),
-            '%s/%s' % (type_, subtype_suffix)
-        ])
+        mime_types.extend([f'{type_}/{subtype_name}', f'{type_}/{subtype_suffix}'])
 
     # As a last resort, if no lexer feels responsible, and
     # the subtype contains 'json', take the JSON lexer

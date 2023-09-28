@@ -112,13 +112,13 @@ def filename_from_content_disposition(
     """
     # attachment; filename=jakubroztocil-httpie-0.4.1-20-g40bd8f6.tar.gz
 
-    msg = Message('Content-Disposition: %s' % content_disposition)
+    msg = Message(f'Content-Disposition: {content_disposition}')
     filename = msg.get_filename()
     if filename:
         # Basic sanitation.
         filename = os.path.basename(filename).lstrip('.').strip()
-        if filename:
-            return filename
+    if filename:
+        return filename
 
 
 def filename_from_url(url: str, content_type: Optional[str]) -> str:
@@ -177,7 +177,7 @@ def trim_filename_if_needed(filename: str, directory='.', extra=0) -> str:
 def get_unique_filename(filename: str, exists=os.path.exists) -> str:
     attempt = 0
     while True:
-        suffix = '-' + str(attempt) if attempt > 0 else ''
+        suffix = f'-{str(attempt)}' if attempt > 0 else ''
         try_filename = trim_filename_if_needed(filename, extra=len(suffix))
         try_filename += suffix
         if not exists(try_filename):
@@ -223,8 +223,7 @@ class Downloader:
         # Ask the server not to encode the content so that we can resume, etc.
         request_headers['Accept-Encoding'] = 'identity'
         if self._resume:
-            bytes_have = os.path.getsize(self._output_file.name)
-            if bytes_have:
+            if bytes_have := os.path.getsize(self._output_file.name):
                 # Set ``Range`` header to resume the download
                 # TODO: Use "If-Range: mtime" to make sure it's fresh?
                 request_headers['Range'] = 'bytes=%d-' % bytes_have
@@ -259,21 +258,19 @@ class Downloader:
                 initial_url=initial_url,
                 final_response=final_response,
             )
-        else:
-            # `--output, -o` provided
-            if self._resume and final_response.status_code == PARTIAL_CONTENT:
-                total_size = parse_content_range(
-                    final_response.headers.get('Content-Range'),
-                    self._resumed_from
-                )
+        elif self._resume and final_response.status_code == PARTIAL_CONTENT:
+            total_size = parse_content_range(
+                final_response.headers.get('Content-Range'),
+                self._resumed_from
+            )
 
-            else:
-                self._resumed_from = 0
-                try:
-                    self._output_file.seek(0)
-                    self._output_file.truncate()
-                except IOError:
-                    pass  # stdout
+        else:
+            self._resumed_from = 0
+            try:
+                self._output_file.seek(0)
+                self._output_file.truncate()
+            except IOError:
+                pass  # stdout
 
         self.status.started(
             resumed_from=self._resumed_from,
@@ -289,11 +286,14 @@ class Downloader:
         )
 
         self._progress_reporter.output.write(
-            'Downloading %sto "%s"\n' % (
-                (humanize_bytes(total_size) + ' '
-                 if total_size is not None
-                 else ''),
-                self._output_file.name
+            (
+                'Downloading %sto "%s"\n'
+                % (
+                    f'{humanize_bytes(total_size)} '
+                    if total_size is not None
+                    else '',
+                    self._output_file.name,
+                )
             )
         )
         self._progress_reporter.start()

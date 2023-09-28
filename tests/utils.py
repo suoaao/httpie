@@ -32,7 +32,7 @@ def mk_config_dir() -> Path:
 
 def add_auth(url, auth):
     proto, rest = url.split('://', 1)
-    return proto + '://' + auth + '@' + rest
+    return f'{proto}://{auth}@{rest}'
 
 
 class MockEnvironment(Environment):
@@ -202,7 +202,7 @@ def http(*args, program_name='http', **kwargs):
     if '--debug' not in args_with_config_defaults:
         if not tolerate_error_exit_status and '--traceback' not in args_with_config_defaults:
             add_to_args.append('--traceback')
-        if not any('--timeout' in arg for arg in args_with_config_defaults):
+        if all('--timeout' not in arg for arg in args_with_config_defaults):
             add_to_args.append('--timeout=3')
 
     complete_args = [program_name, *add_to_args, *args]

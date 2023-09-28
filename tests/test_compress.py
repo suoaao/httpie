@@ -28,35 +28,21 @@ def assert_decompressed_equal(base64_compressed_data, expected_str):
 
 
 def test_compress_skip_negative_ratio(httpbin_both):
-    r = http(
-        '--compress',
-        httpbin_both + '/post',
-        'foo=bar',
-    )
+    r = http('--compress', f'{httpbin_both}/post', 'foo=bar')
     assert HTTP_OK in r
     assert 'Content-Encoding' not in r.json['headers']
     assert r.json['json'] == {'foo': 'bar'}
 
 
 def test_compress_force_with_negative_ratio(httpbin_both):
-    r = http(
-        '--compress',
-        '--compress',
-        httpbin_both + '/post',
-        'foo=bar',
-    )
+    r = http('--compress', '--compress', f'{httpbin_both}/post', 'foo=bar')
     assert HTTP_OK in r
     assert r.json['headers']['Content-Encoding'] == 'deflate'
     assert_decompressed_equal(r.json['data'], '{"foo": "bar"}')
 
 
 def test_compress_json(httpbin_both):
-    r = http(
-        '--compress',
-        '--compress',
-        httpbin_both + '/post',
-        'foo=bar',
-    )
+    r = http('--compress', '--compress', f'{httpbin_both}/post', 'foo=bar')
     assert HTTP_OK in r
     assert r.json['headers']['Content-Encoding'] == 'deflate'
     assert_decompressed_equal(r.json['data'], '{"foo": "bar"}')
@@ -65,11 +51,7 @@ def test_compress_json(httpbin_both):
 
 def test_compress_form(httpbin_both):
     r = http(
-        '--form',
-        '--compress',
-        '--compress',
-        httpbin_both + '/post',
-        'foo=bar',
+        '--form', '--compress', '--compress', f'{httpbin_both}/post', 'foo=bar'
     )
     assert HTTP_OK in r
     assert r.json['headers']['Content-Encoding'] == 'deflate'
@@ -80,13 +62,7 @@ def test_compress_form(httpbin_both):
 def test_compress_stdin(httpbin_both):
     with open(FILE_PATH) as f:
         env = MockEnvironment(stdin=f, stdin_isatty=False)
-        r = http(
-            '--compress',
-            '--compress',
-            'PATCH',
-            httpbin_both + '/patch',
-            env=env,
-        )
+        r = http('--compress', '--compress', 'PATCH', f'{httpbin_both}/patch', env=env)
     assert HTTP_OK in r
     assert r.json['headers']['Content-Encoding'] == 'deflate'
     assert_decompressed_equal(r.json['data'], FILE_CONTENT.strip())
@@ -99,8 +75,8 @@ def test_compress_file(httpbin_both):
         '--compress',
         '--compress',
         'PUT',
-        httpbin_both + '/put',
-        'file@' + FILE_PATH,
+        f'{httpbin_both}/put',
+        f'file@{FILE_PATH}',
     )
     assert HTTP_OK in r
     assert r.json['headers']['Content-Encoding'] == 'deflate'

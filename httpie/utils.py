@@ -81,5 +81,5 @@ def get_content_type(filename):
     if mime:
         content_type = mime
         if encoding:
-            content_type = '%s; charset=%s' % (mime, encoding)
+            content_type = f'{mime}; charset={encoding}'
         return content_type
